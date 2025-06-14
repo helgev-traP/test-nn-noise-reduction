@@ -1,18 +1,13 @@
 use burn::{
     backend::{Autodiff, NdArray, Wgpu},
     optim::AdamConfig,
+    tensor::backend::AutodiffBackend,
 };
-use noise_reduction::{model, train};
+use noise_reduction::{i_model, i_train, io_model, io_train};
+use rand::rand_core::block;
 
-const MODEL_CONFIG: model::ModelConfig = model::ModelConfig {
-    sound_block_size: 96,
-    input_recurrent_hidden: 96,
-    input_recurrent_bias: true,
-    output_recurrent_hidden: 64,
-    output_recurrent_bias: true,
-    linear_bias: true,
-    dropout: 0.1,
-};
+const ARTIFACT_DIR: &str = "/artifact";
+const TRAIN_DATA: &str = "train_data";
 
 fn main() {
     type WgpuBackend = Wgpu<f32, i32>;
@@ -27,23 +22,34 @@ fn main() {
     type AutodiffBackend = WgpuAutodiffBackend;
     let device = wgpu_device;
 
-    let artifact_dir = "/artifact";
+    // Train the input-output model
+    // train_io_model::<AutodiffBackend>(ARTIFACT_DIR, TRAIN_DATA, device.clone());
 
-    let train_config = train::TrainingConfig {
-        model: MODEL_CONFIG,
+    let block_size = 960;
+
+    let i_model_config: i_model::ModelConfig = i_model::ModelConfig {
+        sound_block_size: block_size,
+        input_recurrent_hidden: vec![960, 640],
+        input_recurrent_bias: true,
+        linear_hidden: vec![1280, 960],
+        linear_bias: true,
+    };
+
+    let train_config = i_train::TrainingConfig {
+        model: i_model_config,
         optimizer: AdamConfig::new(),
-        num_epochs: 10,
-        batch_size: 24,
+        num_epochs: 1,
+        batch_size: 32,
         num_workers: 24,
         seed: 42,
         learning_rate: 1.0e-4,
         train_test_split_ratio: 0.8,
         noise_amplitude_range_min: 0.01,
         noise_amplitude_range_max: 0.25,
-        sound_block_size: MODEL_CONFIG.sound_block_size,
-        sound_block_len: 1000,
-        data_dir: "train_data".to_string(),
+        sound_block_size: block_size,
+        sound_block_len: 10,
+        data_dir: TRAIN_DATA.to_string(),
     };
 
-    train::train::<AutodiffBackend>(artifact_dir, train_config, device.clone());
+    i_train::train::<AutodiffBackend>(ARTIFACT_DIR, train_config, device.clone());
 }

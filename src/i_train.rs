@@ -8,7 +8,7 @@ use burn::{
     train::{LearnerBuilder, metric::LossMetric},
 };
 
-use crate::{data::DataBatcher, model::ModelConfig};
+use crate::{data::DataBatcher, i_model::ModelConfig};
 
 #[derive(Config)]
 pub struct TrainingConfig {
@@ -66,7 +66,10 @@ pub fn train<B: AutodiffBackend>(artifact_dir: &str, config: TrainingConfig, dev
     )
     .unwrap();
 
-    println!("Splitting dataset into train and test sets with ratio: {}", config.train_test_split_ratio);
+    println!(
+        "Splitting dataset into train and test sets with ratio: {}",
+        config.train_test_split_ratio
+    );
     let (dataset_train, dataset_test) = dataset.split_by_ratio(config.train_test_split_ratio);
 
     let batcher = DataBatcher::default();
