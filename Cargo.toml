@@ -1,0 +1,10 @@
+[package]
+name = "noise-reduction"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+burn = { version = "0.17", features = ["train", "wgpu", "ndarray"] }
+hound = "3.5.1"
+rand = "0.9.1"
+
